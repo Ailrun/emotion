@@ -2,6 +2,7 @@ import 'test-utils/legacy-env'
 import React from 'react'
 import renderer from 'react-test-renderer'
 import * as enzyme from 'enzyme'
+import * as core10 from '@emotion/core'
 import * as emotion from 'emotion'
 import styled from 'react-emotion'
 import { matchers } from 'jest-emotion'
@@ -119,5 +120,55 @@ describe('toHaveStyleRule', () => {
     // When expect(tree).not.toHaveStyleRule('color', 'red')
     const resultPass = toHaveStyleRule(tree, 'color', 'red')
     expect(resultPass.message()).toMatchSnapshot()
+  })
+
+  describe.only('with Emotion 10 jsx', () => {
+    const divStyle10 = core10.css`
+      color: red;
+    `
+
+    const svgStyle10 = core10.css`
+      width: 100%;
+    `
+
+    const jsxElement10 = core10.jsx(
+      'div',
+      { css: divStyle10 },
+      core10.jsx('svg', { css: svgStyle10 })
+    )
+
+    it('supports react-test-renderer', () => {
+      const tree = renderer.create(jsxElement10).toJSON()
+
+      expect(tree).toHaveStyleRule('color', 'red')
+      expect(tree).not.toHaveStyleRule('width', '100%')
+
+      const svgNode = tree.children[0]
+
+      expect(svgNode).toHaveStyleRule('width', '100%')
+      expect(svgNode).not.toHaveStyleRule('color', 'red')
+    })
+
+    it.only('supports enzyme render methods', () => {
+      enzymeMethods.forEach(method => {
+        const wrapper = enzyme[method](jsxElement10)
+        expect(wrapper).toHaveStyleRule('color', 'red')
+        expect(wrapper).not.toHaveStyleRule('width', '100%')
+        const svgNode = wrapper.find('svg')
+        expect(svgNode).toHaveStyleRule('width', '100%')
+        expect(svgNode).not.toHaveStyleRule('color', 'red')
+      })
+
+      const Component = () => jsxElement10
+
+      enzymeMethods.forEach(method => {
+        const wrapper = enzyme[method](<Component />)
+        expect(wrapper).toHaveStyleRule('color', 'red')
+        expect(wrapper).not.toHaveStyleRule('width', '100%')
+        const svgNode = wrapper.find('svg')
+        expect(svgNode).toHaveStyleRule('width', '100%')
+        expect(svgNode).not.toHaveStyleRule('color', 'red')
+      })
+    })
   })
 })

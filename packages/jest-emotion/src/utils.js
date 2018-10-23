@@ -9,6 +9,7 @@ function getClassNamesFromTestRenderer(selectors, { props = {} }) {
 }
 
 function shouldDive(node) {
+  console.log(node.tag)
   return typeof node.dive === 'function' && typeof node.type() !== 'string'
 }
 
